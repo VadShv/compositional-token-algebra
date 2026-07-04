@@ -1,0 +1,7 @@
+# Core dependencies for reproducing the CTA experiments.
+# Pinned lower bounds reflect the versions used to produce the paper results
+# (Python 3.14, CPU-only). Newer minor versions should work.
+torch>=2.4
+transformers>=4.44
+numpy>=1.26
+matplotlib>=3.8

@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cta"
+version = "0.1.0"
+description = "Compositional Token Algebra: reversible, session-scoped, parameter-free token compression with a learnable compute gate."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "torch>=2.4",
+    "transformers>=4.44",
+    "numpy>=1.26",
+    "matplotlib>=3.8",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]

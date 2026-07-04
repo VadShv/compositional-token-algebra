@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# HuggingFace / torch caches
+.cache/
+*.pt.tmp
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# LaTeX build artifacts
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.bbl
+paper/*.blg
+paper/*.toc
+paper/*.synctex.gz
+
+# Do NOT ignore the shipped caches / results — they are needed for fast
+# reproduction and are tracked intentionally:
+#   results/raw/*.json
+#   results/raw/*.pt
+#   results/figures/*.png
+
+# Third-party corpus files (fetched by download_corpus.sh under their own upstream licenses)
+data/corpus/code_*.py
+data/corpus/tickets.txt
