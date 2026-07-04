@@ -1,0 +1,13 @@
+{
+  "model": "Qwen/Qwen2.5-0.5B",
+  "params_M": 494,
+  "n_layer": 24,
+  "d": 896,
+  "arch": "RoPE + GQA + SwiGLU (2024)",
+  "rows": [
+    {"len": 256,  "m": 228,  "baseline_ms": 1079.0, "cta_ms": 1016.0, "speedup": 1.06},
+    {"len": 512,  "m": 421,  "baseline_ms": 2163.0, "cta_ms": 1942.0, "speedup": 1.11},
+    {"len": 1024, "m": 727,  "baseline_ms": 4340.0, "cta_ms": 3176.0, "speedup": 1.37},
+    {"len": 2048, "m": 1286, "baseline_ms": 9010.0, "cta_ms": 5688.0, "speedup": 1.58}
+  ]
+}

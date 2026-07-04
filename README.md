@@ -177,6 +177,30 @@ The speedup **grows with context length** as attention comes to dominate.
 GPT-2's 1024-token positional limit caps the baseline sweep (raw sequences
 beyond 1024 crash in `wpe`), so the largest wins live just below that ceiling.
 
+**On a modern backbone (Qwen2.5-0.5B).** To confirm the mechanism is not tied
+to GPT-2's 2019-era design, we repeat the wall-clock measurement on
+**Qwen2.5-0.5B** (494M, 24 layers, d=896, RoPE + grouped-query attention 14/2 +
+SwiGLU, 32k window). CTA operates purely on input embeddings
+(`model.model(inputs_embeds=...)` + `lm_head`), so the port required **no change
+to the algorithm** — only a forward wrapper. Reversibility is even cleaner than
+GPT-2 (**max L∞ error 3.73e-9** vs 4.77e-7), and the speedup again rises with
+length — measured out to 2048 tokens thanks to the 32k window:
+
+| Length | Collapsed m | Baseline | CTA | Speedup |
+|-------:|------------:|---------:|----:|:-------:|
+| 256  | 228  | 1079 ms | 1016 ms | 1.06× |
+| 512  | 421  | 2163 ms | 1942 ms | 1.11× |
+| 1024 | 727  | 4340 ms | 3176 ms | **1.37×** |
+| 2048 | 1286 | 9010 ms | 5688 ms | **1.58×** |
+
+At a fixed length the realized speedup is **lower than GPT-2** (1.11× vs 1.42× at
+512) because Qwen has a deeper stack (24 vs 12 layers) and a much larger LM head
+(~152k vs ~50k vocab), so the length-linear cost is a bigger share of total
+compute. But the **trend is identical and strengthens with length** — the same
+quadratic-attention story, on a current architecture. `→ make walltime-qwen`
+
+![Wall-clock speedup vs sequence length on Qwen2.5-0.5B](results/figures/qwen_walltime.png)
+
 **Bonus — context-window extension.** Because collapse is reversible and
 session-scoped, CTA can fit **~1900 raw tokens into GPT-2's 1024-token window**
 (raw 1900 → m 1022; the baseline overflows outright past 1024). That is an

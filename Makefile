@@ -15,6 +15,8 @@
 #   make diagnose  position vs content-opacity ablation (moderate)
 #   make walltime  (SLOW) real CPU wall-clock: size ladder + length sweep
 #   make plots-walltime  regenerate the wall-clock figure from shipped JSON
+#   make walltime-qwen   (SLOW) wall-clock on Qwen2.5-0.5B (modern backbone)
+#   make plots-qwen      regenerate the Qwen wall-clock figure from shipped JSON
 #   make paper     compile the LaTeX preprint (requires a LaTeX toolchain)
 #   make all-fast  gate + plots (full fast reproduction)
 #   make clean     remove Python caches
@@ -24,7 +26,7 @@ PY ?= python
 export OMP_NUM_THREADS ?= 2
 EXP := experiments
 
-.PHONY: setup corpus gate plots main frontier cache killer diagnose walltime plots-walltime paper all-fast clean
+.PHONY: setup corpus gate plots main frontier cache killer diagnose walltime plots-walltime walltime-qwen plots-qwen paper all-fast clean
 
 setup:
 	$(PY) -m pip install -r requirements.txt
@@ -58,6 +60,12 @@ walltime:
 
 plots-walltime:
 	cd $(EXP) && $(PY) plot_walltime.py
+
+walltime-qwen:
+	cd $(EXP) && $(PY) benchmark_qwen.py
+
+plots-qwen:
+	cd $(EXP) && $(PY) plot_qwen.py
 
 paper:
 	cd paper && tectonic cta.tex || pdflatex cta.tex
