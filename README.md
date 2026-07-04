@@ -300,7 +300,7 @@ positive on every row, for both **code** and **tickets**.
 @misc{cta2026,
   title  = {Compositional Token Algebra: Reversible, Session-Scoped,
             Parameter-Free Token Compression with a Learnable Compute Gate},
-  author = {<add author name / Astra Group affiliation>},
+  author = {Serzhantov, Vladimir},
   year   = {2026},
   note   = {Preprint}
 }
