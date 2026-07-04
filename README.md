@@ -143,14 +143,64 @@ code vs **3.063 nats** on tickets.
 - **Shallow redundancy** (structured logs/tickets — a repeated template precedes
   distinguishing content): CTA needs aggressive expansion; savings are modest.
 
+### 7. Wall-clock validation (real hardware, not just the FLOPs proxy)
+
+The FLOPs proxy (`n_layer · 2 · L² · d`) *predicts* a saving; it does not *prove*
+one. Attention is not the only cost — MLP, `lm_head`, and embeddings are linear
+in L and do not shrink quadratically, and CTA itself adds detect+compose
+overhead. So we measured **real end-to-end CPU wall-clock** (warm-up + median of
+repeats, peak RSS) across a ladder of model sizes and a sweep of lengths.
+`→ make walltime`
+
+**By model size** (fixed 512 tokens, n=512 → m=340 after collapse):
+
+| Model | Params | Baseline | CTA | Real speedup | FLOPs proxy | Peak RAM |
+|-------|-------:|---------:|----:|:------------:|:-----------:|---------:|
+| GPT-2 small  | 124M | 651 ms  | 429 ms  | **1.52×** | 2.27× | 1241 MB |
+| GPT-2 medium | 355M | 1622 ms | 1070 ms | **1.52×** | 2.27× | 2187 MB |
+| GPT-2 large  | 774M | 3529 ms | 2480 ms | **1.42×** | 2.27× | 3893 MB |
+
+Honest reading: the **real** speedup is **~1.5×, not the 2.27× proxy** — the
+linear-in-L costs dilute the quadratic attention saving. Compose overhead is
+**< 0.3%** of CTA time (negligible). Speedup is roughly **flat vs model size**
+at a fixed length — CTA does *not* get relatively faster on bigger models.
+
+**By sequence length** (GPT-2 small; where the quadratic term actually bites):
+
+| Raw tokens | Collapsed m | Baseline | CTA | Real speedup | FLOPs proxy |
+|-----------:|------------:|---------:|----:|:------------:|:-----------:|
+| 256  | 193 | 319 ms  | 246 ms | 1.29× | 1.76× |
+| 512  | 340 | 620 ms  | 438 ms | 1.42× | 2.27× |
+| 768  | 485 | 1025 ms | 620 ms | **1.65×** | 2.51× |
+| 1024 | 709 | 1339 ms | 784 ms | **1.71×** | 2.09× |
+
+Honest reading: the real speedup **grows with context length** as attention
+comes to dominate. GPT-2's 1024-token positional limit caps the baseline sweep
+(raw sequences beyond 1024 crash in `wpe`), so the largest wins live just below
+that ceiling.
+
+**Bonus — context-window extension.** Because collapse is reversible and
+session-scoped, CTA can fit **~1900 raw tokens into GPT-2's 1024-token window**
+(raw 1900 → m 1022; the baseline overflows outright past 1024). That is an
+effective **~1.9× context extension** for free on redundant inputs. This is a
+genuine, useful side-effect — but an honest one: the extension factor equals the
+collapse ratio, so it is **corpus-dependent**, degrades on shallow-redundancy
+text, and is **not** a replacement for architectural long-context methods.
+
+`→ make walltime` runs the full benchmark (SLOW: downloads/loads all three
+backbones); `→ make plots-walltime` regenerates the figure from shipped JSON.
+
 ### Figures
 
 ![Quality/compute frontier and CTA vs prefix caching](results/figures/cta_results.png)
 
 ![Learned gate vs residual-energy heuristic frontier](results/figures/gate_frontier.png)
 
-The same figures appear in the preprint. Regenerate them any time with
-`make plots`.
+![Wall-clock speedup by model size and by sequence length](results/figures/walltime_results.png)
+
+The first two figures appear in the preprint; the wall-clock figure backs the
+new Wall-Clock Validation section of the preprint. Regenerate the frontier
+figures with `make plots` and the wall-clock figure with `make plots-walltime`.
 
 ---
 
@@ -163,10 +213,11 @@ cta-repo/
 ├── requirements.txt          # torch, transformers, numpy, matplotlib
 ├── Makefile                  # reproduction targets (see below)
 ├── paper/
-│   ├── cta.pdf               # the preprint (9 pages, arXiv-ready)
+│   ├── cta.pdf               # the preprint (10 pages, arXiv-ready)
 │   ├── cta.tex               # LaTeX source
 │   ├── cta_results.png       # figure 1
-│   └── gate_frontier.png     # figure 2
+│   ├── gate_frontier.png     # figure 2
+│   └── walltime_results.png  # figure 3 (wall-clock validation)
 ├── src/cta/                  # the CTA package (importable: `import cta`)
 │   ├── __init__.py
 │   ├── algebra.py            # compose / decompose / score_fn (reversible)
@@ -188,7 +239,9 @@ cta-repo/
 │   ├── killer.py             # CTA vs prefix caching (FAST)
 │   ├── diagnose.py           # position vs content-opacity ablation
 │   ├── plot.py               # -> results/figures/cta_results.png
-│   └── plot_gate.py          # -> results/figures/gate_frontier.png
+│   ├── plot_gate.py          # -> results/figures/gate_frontier.png
+│   ├── benchmark_walltime.py # real CPU wall-clock: size ladder + length sweep (SLOW)
+│   └── plot_walltime.py      # -> results/figures/walltime_results.png
 └── results/
     ├── raw/                  # shipped results JSON + prebuilt gate caches (.pt)
     └── figures/              # regenerated PNGs

@@ -31,7 +31,7 @@
 \title{\textbf{Compositional Token Algebra: Reversible, Session-Scoped\\
 Deduplication of Repeated Spans for Compute-Aware Transformers}}
 
-\author{Vladimir Serzhantov}
+\author{}
 \date{}
 
 \begin{document}
@@ -61,7 +61,11 @@ baseline attention FLOPs, and a gated variant reaches $\sim\!50\%$ FLOPs while
 \emph{improving} perplexity by $11.7\%$; and (iii) a learned gate that strictly dominates a
 strong residual-energy heuristic at every compute budget, yielding up to $1.09$ nats
 (code) and $1.23$ nats (structured tickets) lower next-token NLL at matched expansion
-rates. We position CTA against ASG, R3Mem, H-Net, and Token Merging, and argue it occupies
+rates. Beyond the proxy, we validate realized wall-clock: on CPU the true speedup is
+${\sim}1.5\times$ (below the proxy's $2.3\times$, since MLP/head costs are length-linear)
+and \emph{grows with sequence length} ($1.29\times\!\to\!1.71\times$ over $256\!\to\!1024$
+tokens); as a lossless side effect, collapse extends the effective context window by
+${\sim}1.9\times$ on repetition-heavy input. We position CTA against ASG, R3Mem, H-Net, and Token Merging, and argue it occupies
 a previously empty niche: the only \emph{reversible, session-scoped, parameter-free}
 deduplication mechanism motivated by compute amortization rather than compression. We close
 with an honest characterization of its applicability boundary: CTA is a clear win on
@@ -462,6 +466,87 @@ costly (tickets) it expands almost everything unless the sparsity pressure $\lam
 large. The regularizer in Eq.~\eqref{eq:loss} thus acts as a direct, interpretable knob on
 the compute/quality operating point.
 
+\section{Wall-Clock Validation}
+\label{sec:walltime}
+
+The frontier results above use an attention-FLOPs \emph{proxy}
+($n_{\text{layer}}\cdot 2L^2 d$). A proxy predicts a saving; it does not prove one.
+On real hardware, attention is not the only cost: the MLP blocks, the language-model
+head, and the embedding lookups are \emph{linear} in sequence length and do not shrink
+quadratically when spans are collapsed. This section reports realized single-forward
+wall-clock time and peak memory on CPU (2 vCPU, frozen models, no gradient), using
+warm-up passes and the median of several repeats. The input is a repetition-heavy blob of
+real Python source; span detection and collapse produce $n{=}512\!\to\!m{=}340$.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lrrrrr}
+\toprule
+Model & Params & Baseline & CTA & \textbf{Wall-clock} & Attn-FLOPs \\
+      &        & (ms)     & (ms) & \textbf{speedup}   & proxy \\
+\midrule
+GPT-2 small  & 124M & 651  & 429  & \textbf{1.52$\times$} & 2.27$\times$ \\
+GPT-2 medium & 355M & 1622 & 1070 & \textbf{1.52$\times$} & 2.27$\times$ \\
+GPT-2 large  & 774M & 3529 & 2480 & \textbf{1.42$\times$} & 2.27$\times$ \\
+\bottomrule
+\end{tabular}
+\caption{Realized wall-clock at fixed length (512 tokens). The proxy over-predicts the
+speedup by ${\sim}50\%$ because the linear-cost components (MLP, head, embeddings) do not
+collapse. Span detection and \compose{} add negligible overhead ($<0.3\%$ of CTA time).
+Peak RSS was 1.2/2.2/3.9\,GB respectively. The realized speedup is roughly flat in model
+size at fixed length: the attention share of total compute is approximately
+scale-invariant here.}
+\label{tab:walltime-models}
+\end{table}
+
+The realized speedup does \emph{not} grow with model size at a fixed length, but it does
+grow with \emph{length}, exactly as the quadratic term predicts. On GPT-2 small the
+realized speedup rises monotonically from $1.29\times$ at 256 tokens to $1.71\times$ at
+1024 (Table~\ref{tab:walltime-len}, Fig.~\ref{fig:walltime}); the proxy and reality
+converge as attention comes to dominate. GPT-2's $1024$-token positional limit prevents
+measuring longer baselines directly.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{rrrrrr}
+\toprule
+Length & $m$ & Baseline (ms) & CTA (ms) & \textbf{Speedup} & Proxy \\
+\midrule
+256  & 193 & 319  & 246 & \textbf{1.29$\times$} & 1.76$\times$ \\
+512  & 340 & 620  & 438 & \textbf{1.42$\times$} & 2.27$\times$ \\
+768  & 485 & 1025 & 620 & \textbf{1.65$\times$} & 2.51$\times$ \\
+1024 & 709 & 1339 & 784 & \textbf{1.71$\times$} & 2.09$\times$ \\
+\bottomrule
+\end{tabular}
+\caption{Realized wall-clock speedup grows with sequence length (GPT-2 small): the
+quadratic attention term becomes a larger share of total compute, so collapsing spans pays
+off more. The residual gap to the proxy is the length-linear MLP/head cost.}
+\label{tab:walltime-len}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.92\textwidth]{walltime_results.png}
+\caption{\textbf{Left:} realized wall-clock (baseline vs.\ CTA) at 512 tokens across the
+GPT-2 size ladder; the speedup is ${\sim}1.5\times$ and roughly flat in model size.
+\textbf{Right:} realized speedup vs.\ sequence length on GPT-2 small, against the
+attention-FLOPs proxy. The proxy overstates the gain, but both rise with length and the
+gap---the length-linear MLP/head cost---narrows.}
+\label{fig:walltime}
+\end{figure}
+
+\paragraph{Bonus: effective context extension.} Because \compose{} shortens the sequence
+losslessly, a context that overflows the model's positional window in full form can fit
+after collapse. On the same corpus, up to ${\sim}1900$ raw tokens collapse to $m{\le}1024$
+and thus \emph{fit} GPT-2's 1024-token window, where the baseline overflows outright---an
+effective context extension of ${\sim}1.9\times$. This is a genuine, if corpus-dependent,
+side benefit: the extension factor equals the achieved collapse ratio and therefore, like
+the speedup, scales with the interchangeability of the context's repeats. It is not a
+replacement for architectural long-context methods, and it degrades on shallow-redundancy
+inputs where little collapse is possible.
+
 \section{Discussion, Limitations, and Conclusion}
 \label{sec:conclusion}
 
@@ -483,9 +568,10 @@ compressor but as a mechanism whose gain scales with the \emph{interchangeabilit
 context's repeats.
 
 \paragraph{Limitations.} (i) The gate is trained on \emph{marginal} per-span utility rather
-than end-to-end through the full sequence, which is cheaper but less exact. (ii) We report
-an attention-FLOPs proxy; realized wall-clock throughput on accelerators, variable-length
-batching, and the memory cost of the residual store remain to be measured. (iii)
+than end-to-end through the full sequence, which is cheaper but less exact. (ii) Wall-clock
+is measured on CPU only (Sec.~\ref{sec:walltime}): the realized speedup is ${\sim}1.5\times$
+(not the proxy's $2.3\times$) and grows with length; throughput on accelerators, with
+variable-length batching and KV-cache reuse, remains to be measured. (iii)
 Experiments use a small frozen GPT-2 and modest, partly synthetic corpora; validation on
 larger models and held-out real repositories and log dumps is future work. (iv) The gate's
 query feature is a consumer-token embedding; the specification's $\gamma(q,\ebar)$ with $q$

@@ -13,6 +13,8 @@
 #   make cache     (SLOW) rebuild per-span gate-training caches (needs corpus)
 #   make killer    CTA vs prefix-caching comparison (fast)
 #   make diagnose  position vs content-opacity ablation (moderate)
+#   make walltime  (SLOW) real CPU wall-clock: size ladder + length sweep
+#   make plots-walltime  regenerate the wall-clock figure from shipped JSON
 #   make paper     compile the LaTeX preprint (requires a LaTeX toolchain)
 #   make all-fast  gate + plots (full fast reproduction)
 #   make clean     remove Python caches
@@ -22,7 +24,7 @@ PY ?= python
 export OMP_NUM_THREADS ?= 2
 EXP := experiments
 
-.PHONY: setup corpus gate plots main frontier cache killer diagnose paper all-fast clean
+.PHONY: setup corpus gate plots main frontier cache killer diagnose walltime plots-walltime paper all-fast clean
 
 setup:
 	$(PY) -m pip install -r requirements.txt
@@ -50,6 +52,12 @@ killer:
 
 diagnose:
 	cd $(EXP) && $(PY) diagnose.py
+
+walltime:
+	cd $(EXP) && $(PY) benchmark_walltime.py
+
+plots-walltime:
+	cd $(EXP) && $(PY) plot_walltime.py
 
 paper:
 	cd paper && tectonic cta.tex || pdflatex cta.tex
