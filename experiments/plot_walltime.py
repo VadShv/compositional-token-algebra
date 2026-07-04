@@ -23,23 +23,24 @@ for i, m in enumerate(models):
             ha="center", fontsize=11, fontweight="bold", color="#1d3557")
 ax.set_xticks(list(x)); ax.set_xticklabels(labels, fontsize=9)
 ax.set_ylabel("Forward pass wall-clock (ms, CPU)")
-ax.set_title("Wall-clock at fixed length (512 tok)\nreal speedup ~1.5x, roughly flat vs model size")
+ax.set_title("Measured wall-clock at fixed length (512 tok)\nspeedup ~1.5x, roughly flat vs model size")
 ax.legend(fontsize=9); ax.grid(alpha=0.3, axis="y")
 
-# --- Plot 2: speedup vs sequence length (real vs proxy), gpt2 ---
+# --- Plot 2: measured speedup vs sequence length, gpt2 ---
 ax = axes[1]
 Ls = [r["len"] for r in lens]
 real = [r["speedup"] for r in lens]
-proxy = [r["proxy"] for r in lens]
-ax.plot(Ls, real, "-o", color=teal, lw=2.4, ms=7, label="Real wall-clock speedup")
-ax.plot(Ls, proxy, "--s", color=orange, lw=2, ms=6, label="Attention-FLOPs proxy (paper)")
+ax.plot(Ls, real, "-o", color=teal, lw=2.4, ms=7, label="Measured wall-clock speedup")
+for lx, ly in zip(Ls, real):
+    ax.annotate(f"{ly:.2f}x", (lx, ly), textcoords="offset points", xytext=(0, 9),
+                ha="center", fontsize=9, fontweight="bold", color="#1d3557")
 ax.axhline(1.0, color="gray", ls=":", lw=1, label="no speedup")
 ax.axvline(1024, color="#c00", ls="--", lw=1.2, alpha=0.7)
-ax.text(1024, 1.05, " GPT-2 ctx limit", color="#c00", fontsize=8.5, ha="right", rotation=90, va="bottom")
+ax.text(1024, 1.02, " GPT-2 ctx limit", color="#c00", fontsize=8.5, ha="right", rotation=90, va="bottom")
 ax.set_xlabel("Sequence length (tokens)")
 ax.set_ylabel("Speedup vs baseline (x)")
-ax.set_title("Real speedup rises with LENGTH: 1.29x -> 1.71x (256->1024 tok)\nproxy overstates; gap = linear MLP/head cost")
-ax.legend(fontsize=9, loc="center right"); ax.grid(alpha=0.3)
+ax.set_title("Measured speedup rises with LENGTH\n1.29x -> 1.71x (256 -> 1024 tok)")
+ax.legend(fontsize=9, loc="lower right"); ax.grid(alpha=0.3)
 
 plt.tight_layout()
 out = os.path.join(_bootstrap.RESULTS_FIG, "walltime_results.png")

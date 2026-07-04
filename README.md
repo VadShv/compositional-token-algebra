@@ -143,41 +143,39 @@ code vs **3.063 nats** on tickets.
 - **Shallow redundancy** (structured logs/tickets — a repeated template precedes
   distinguishing content): CTA needs aggressive expansion; savings are modest.
 
-### 7. Wall-clock validation (real hardware, not just the FLOPs proxy)
+### 7. Wall-clock validation (measured on real hardware)
 
-The FLOPs proxy (`n_layer · 2 · L² · d`) *predicts* a saving; it does not *prove*
-one. Attention is not the only cost — MLP, `lm_head`, and embeddings are linear
-in L and do not shrink quadratically, and CTA itself adds detect+compose
-overhead. So we measured **real end-to-end CPU wall-clock** (warm-up + median of
-repeats, peak RSS) across a ladder of model sizes and a sweep of lengths.
-`→ make walltime`
+All numbers below are **measured end-to-end CPU wall-clock** (warm-up + median
+of repeats, peak RSS) across a ladder of model sizes and a sweep of lengths.
+These are realized speedups, not theoretical predictions. `→ make walltime`
 
 **By model size** (fixed 512 tokens, n=512 → m=340 after collapse):
 
-| Model | Params | Baseline | CTA | Real speedup | FLOPs proxy | Peak RAM |
-|-------|-------:|---------:|----:|:------------:|:-----------:|---------:|
-| GPT-2 small  | 124M | 651 ms  | 429 ms  | **1.52×** | 2.27× | 1241 MB |
-| GPT-2 medium | 355M | 1622 ms | 1070 ms | **1.52×** | 2.27× | 2187 MB |
-| GPT-2 large  | 774M | 3529 ms | 2480 ms | **1.42×** | 2.27× | 3893 MB |
+| Model | Params | Baseline | CTA | Speedup | Peak RAM |
+|-------|-------:|---------:|----:|:-------:|---------:|
+| GPT-2 small  | 124M | 651 ms  | 429 ms  | **1.52×** | 1241 MB |
+| GPT-2 medium | 355M | 1622 ms | 1070 ms | **1.52×** | 2187 MB |
+| GPT-2 large  | 774M | 3529 ms | 2480 ms | **1.42×** | 3893 MB |
 
-Honest reading: the **real** speedup is **~1.5×, not the 2.27× proxy** — the
-linear-in-L costs dilute the quadratic attention saving. Compose overhead is
-**< 0.3%** of CTA time (negligible). Speedup is roughly **flat vs model size**
-at a fixed length — CTA does *not* get relatively faster on bigger models.
+Compose overhead is **< 0.3%** of CTA time (negligible). The speedup is roughly
+**flat vs model size** at a fixed length — CTA does *not* get relatively faster
+on bigger models. (A quadratic attention-FLOPs count predicts a larger ~2.3×
+saving; the realized number is lower because MLP, `lm_head`, and embeddings are
+linear in L and do not shrink — which is exactly why we report measured
+wall-clock rather than a FLOPs estimate.)
 
 **By sequence length** (GPT-2 small; where the quadratic term actually bites):
 
-| Raw tokens | Collapsed m | Baseline | CTA | Real speedup | FLOPs proxy |
-|-----------:|------------:|---------:|----:|:------------:|:-----------:|
-| 256  | 193 | 319 ms  | 246 ms | 1.29× | 1.76× |
-| 512  | 340 | 620 ms  | 438 ms | 1.42× | 2.27× |
-| 768  | 485 | 1025 ms | 620 ms | **1.65×** | 2.51× |
-| 1024 | 709 | 1339 ms | 784 ms | **1.71×** | 2.09× |
+| Raw tokens | Collapsed m | Baseline | CTA | Speedup |
+|-----------:|------------:|---------:|----:|:-------:|
+| 256  | 193 | 319 ms  | 246 ms | 1.29× |
+| 512  | 340 | 620 ms  | 438 ms | 1.42× |
+| 768  | 485 | 1025 ms | 620 ms | **1.65×** |
+| 1024 | 709 | 1339 ms | 784 ms | **1.71×** |
 
-Honest reading: the real speedup **grows with context length** as attention
-comes to dominate. GPT-2's 1024-token positional limit caps the baseline sweep
-(raw sequences beyond 1024 crash in `wpe`), so the largest wins live just below
-that ceiling.
+The speedup **grows with context length** as attention comes to dominate.
+GPT-2's 1024-token positional limit caps the baseline sweep (raw sequences
+beyond 1024 crash in `wpe`), so the largest wins live just below that ceiling.
 
 **Bonus — context-window extension.** Because collapse is reversible and
 session-scoped, CTA can fit **~1900 raw tokens into GPT-2's 1024-token window**
