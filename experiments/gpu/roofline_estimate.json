@@ -1,0 +1,202 @@
+{
+  "Qwen2.5-0.5B": [
+    {
+      "len": 512,
+      "linear_pct": 95.7,
+      "attn_quad_pct": 4.3,
+      "r": 0.82,
+      "cta_time_ceiling": 0.814,
+      "speedup_ceiling": 1.23
+    },
+    {
+      "len": 1024,
+      "linear_pct": 91.8,
+      "attn_quad_pct": 8.2,
+      "r": 0.71,
+      "cta_time_ceiling": 0.693,
+      "speedup_ceiling": 1.44
+    },
+    {
+      "len": 2048,
+      "linear_pct": 84.9,
+      "attn_quad_pct": 15.1,
+      "r": 0.63,
+      "cta_time_ceiling": 0.595,
+      "speedup_ceiling": 1.68
+    },
+    {
+      "len": 4096,
+      "linear_pct": 73.7,
+      "attn_quad_pct": 26.3,
+      "r": 0.6,
+      "cta_time_ceiling": 0.537,
+      "speedup_ceiling": 1.86
+    },
+    {
+      "len": 8192,
+      "linear_pct": 58.4,
+      "attn_quad_pct": 41.6,
+      "r": 0.58,
+      "cta_time_ceiling": 0.479,
+      "speedup_ceiling": 2.09
+    },
+    {
+      "len": 16384,
+      "linear_pct": 41.2,
+      "attn_quad_pct": 58.8,
+      "r": 0.55,
+      "cta_time_ceiling": 0.404,
+      "speedup_ceiling": 2.47
+    }
+  ],
+  "Qwen2.5-3B": [
+    {
+      "len": 512,
+      "linear_pct": 97.6,
+      "attn_quad_pct": 2.4,
+      "r": 0.82,
+      "cta_time_ceiling": 0.816,
+      "speedup_ceiling": 1.22
+    },
+    {
+      "len": 1024,
+      "linear_pct": 95.3,
+      "attn_quad_pct": 4.7,
+      "r": 0.71,
+      "cta_time_ceiling": 0.7,
+      "speedup_ceiling": 1.43
+    },
+    {
+      "len": 2048,
+      "linear_pct": 91.1,
+      "attn_quad_pct": 8.9,
+      "r": 0.63,
+      "cta_time_ceiling": 0.609,
+      "speedup_ceiling": 1.64
+    },
+    {
+      "len": 4096,
+      "linear_pct": 83.6,
+      "attn_quad_pct": 16.4,
+      "r": 0.6,
+      "cta_time_ceiling": 0.561,
+      "speedup_ceiling": 1.78
+    },
+    {
+      "len": 8192,
+      "linear_pct": 71.9,
+      "attn_quad_pct": 28.1,
+      "r": 0.58,
+      "cta_time_ceiling": 0.511,
+      "speedup_ceiling": 1.96
+    },
+    {
+      "len": 16384,
+      "linear_pct": 56.1,
+      "attn_quad_pct": 43.9,
+      "r": 0.55,
+      "cta_time_ceiling": 0.441,
+      "speedup_ceiling": 2.27
+    }
+  ],
+  "Qwen2.5-7B": [
+    {
+      "len": 512,
+      "linear_pct": 98.6,
+      "attn_quad_pct": 1.4,
+      "r": 0.82,
+      "cta_time_ceiling": 0.818,
+      "speedup_ceiling": 1.22
+    },
+    {
+      "len": 1024,
+      "linear_pct": 97.2,
+      "attn_quad_pct": 2.8,
+      "r": 0.71,
+      "cta_time_ceiling": 0.704,
+      "speedup_ceiling": 1.42
+    },
+    {
+      "len": 2048,
+      "linear_pct": 94.5,
+      "attn_quad_pct": 5.5,
+      "r": 0.63,
+      "cta_time_ceiling": 0.617,
+      "speedup_ceiling": 1.62
+    },
+    {
+      "len": 4096,
+      "linear_pct": 89.6,
+      "attn_quad_pct": 10.4,
+      "r": 0.6,
+      "cta_time_ceiling": 0.575,
+      "speedup_ceiling": 1.74
+    },
+    {
+      "len": 8192,
+      "linear_pct": 81.1,
+      "attn_quad_pct": 18.9,
+      "r": 0.58,
+      "cta_time_ceiling": 0.534,
+      "speedup_ceiling": 1.87
+    },
+    {
+      "len": 16384,
+      "linear_pct": 68.3,
+      "attn_quad_pct": 31.7,
+      "r": 0.55,
+      "cta_time_ceiling": 0.471,
+      "speedup_ceiling": 2.12
+    }
+  ],
+  "Llama-3-8B": [
+    {
+      "len": 512,
+      "linear_pct": 98.2,
+      "attn_quad_pct": 1.8,
+      "r": 0.82,
+      "cta_time_ceiling": 0.817,
+      "speedup_ceiling": 1.22
+    },
+    {
+      "len": 1024,
+      "linear_pct": 96.5,
+      "attn_quad_pct": 3.5,
+      "r": 0.71,
+      "cta_time_ceiling": 0.703,
+      "speedup_ceiling": 1.42
+    },
+    {
+      "len": 2048,
+      "linear_pct": 93.3,
+      "attn_quad_pct": 6.7,
+      "r": 0.63,
+      "cta_time_ceiling": 0.614,
+      "speedup_ceiling": 1.63
+    },
+    {
+      "len": 4096,
+      "linear_pct": 87.5,
+      "attn_quad_pct": 12.5,
+      "r": 0.6,
+      "cta_time_ceiling": 0.57,
+      "speedup_ceiling": 1.75
+    },
+    {
+      "len": 8192,
+      "linear_pct": 77.8,
+      "attn_quad_pct": 22.2,
+      "r": 0.58,
+      "cta_time_ceiling": 0.526,
+      "speedup_ceiling": 1.9
+    },
+    {
+      "len": 16384,
+      "linear_pct": 63.6,
+      "attn_quad_pct": 36.4,
+      "r": 0.55,
+      "cta_time_ceiling": 0.46,
+      "speedup_ceiling": 2.17
+    }
+  ]
+}
