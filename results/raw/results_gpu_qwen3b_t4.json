@@ -1,0 +1,73 @@
+{
+  "model": "Qwen/Qwen2.5-3B",
+  "attn_impl": "sdpa",
+  "flash_attn": false,
+  "gpu": "Tesla T4",
+  "n_layer": 36,
+  "d": 2048,
+  "vocab": 151936,
+  "reversibility": {
+    "uniform": 7.450580596923828e-09,
+    "norm": 7.450580596923828e-09,
+    "posdecay": 7.450580596923828e-09,
+    "selfconsist": 7.450580596923828e-09
+  },
+  "rows": [
+    {
+      "len": 512,
+      "m": 383,
+      "collapsed_spans": 35,
+      "ratio": 0.748,
+      "baseline_ms": 1167.1,
+      "cta_ms": 898.4,
+      "compose_ms": 4.9,
+      "detect_ms": 6.6,
+      "speedup_fwd": 1.299,
+      "speedup_total": 1.283,
+      "tok_s_base": 439.0,
+      "tok_s_cta": 426.0
+    },
+    {
+      "len": 1024,
+      "m": 723,
+      "collapsed_spans": 79,
+      "ratio": 0.706,
+      "baseline_ms": 2575.2,
+      "cta_ms": 1953.2,
+      "compose_ms": 16.5,
+      "detect_ms": 19.5,
+      "speedup_fwd": 1.318,
+      "speedup_total": 1.295,
+      "tok_s_base": 398.0,
+      "tok_s_cta": 370.0
+    },
+    {
+      "len": 2048,
+      "m": 1377,
+      "collapsed_spans": 182,
+      "ratio": 0.672,
+      "baseline_ms": 6692.8,
+      "cta_ms": 3970.1,
+      "compose_ms": 21.1,
+      "detect_ms": 24.4,
+      "speedup_fwd": 1.686,
+      "speedup_total": 1.667,
+      "tok_s_base": 306.0,
+      "tok_s_cta": 347.0
+    },
+    {
+      "len": 4096,
+      "m": 2318,
+      "collapsed_spans": 442,
+      "ratio": 0.566,
+      "baseline_ms": 14215.3,
+      "cta_ms": 7444.5,
+      "compose_ms": 45.1,
+      "detect_ms": 295.4,
+      "speedup_fwd": 1.91,
+      "speedup_total": 1.826,
+      "tok_s_base": 288.0,
+      "tok_s_cta": 311.0
+    }
+  ]
+}

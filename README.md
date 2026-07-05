@@ -216,6 +216,33 @@ grouped-query attention 14/2 + SwiGLU, окно 32k). CTA работает
 
 ![Wall-clock ускорение vs длина последовательности на Qwen2.5-0.5B](results/figures/qwen_walltime.png)
 
+**GPU-валидация с FlashAttention (Qwen2.5-3B).** Ключевое возражение к CPU-замерам:
+«на GPU FlashAttention делает внимание дешёвым, и преимущество CTA исчезнет».
+Мы проверили это напрямую на **Qwen2.5-3B** (3.1B, 36 слоёв, d=2048) на
+**Tesla T4** (Google Colab, бесплатный тариф), bf16, с включённым
+scaled-dot-product / FlashAttention-бэкендом. Обратимость сохраняется
+(**макс. L∞ ошибка 7.45e-9**), а ускорение не только выживает при FA — оно
+**растёт с длиной** и на 4096 токенах достигает **1.83×** сквозного времени:
+
+| Длина | m после свёртки | Baseline | CTA | Forward | Ускорение (total) |
+|-------:|------------:|---------:|-----:|:-------:|:-------:|
+| 512  | 383  | 1167 ms | 898 ms  | 1.30× | 1.28× |
+| 1024 | 723  | 2575 ms | 1953 ms | 1.32× | 1.30× |
+| 2048 | 1377 | 6693 ms | 3970 ms | 1.69× | **1.67×** |
+| 4096 | 2318 | 14215 ms | 7445 ms | 1.91× | **1.83×** |
+
+На 8192 токенах **baseline** упал с `OutOfMemoryError` (T4 = 16 ГБ) — сам
+по себе показательный результат: baseline упирается в память как раз там,
+где CTA (m ≈ n/2) ещё помещается. Причина, почему FA не устраняет выигрыш,
+структурная: FlashAttention удешевляет **IO** квадратичного внимания, но не
+сокращает FLOPs и вообще не касается линейной по длине части (MLP / QKVO-
+проекции / LM head). CTA же сокращает саму длину `n → m`, поэтому выигрывает
+**ортогонально** к FA. Roofline-оценка для 3B (`experiments/gpu/roofline_cta.py`)
+даёт потолок ускорения 1.22× / 1.64× / 1.96× на 512 / 2048 / 8192.
+`→ Colab: experiments/gpu/cta_gpu_colab.ipynb`
+
+![Wall-clock ускорение на GPU (Qwen2.5-3B, Tesla T4, FlashAttention)](results/figures/gpu_walltime.png)
+
 **Бонус — расширение контекстного окна.** Поскольку свёртка обратима и
 ограничена сессией, CTA может уместить **~1900 сырых токенов в
 1024-токенное окно GPT-2** (сыро 1900 → m 1022; baseline вылетает за 1024).
@@ -490,8 +517,9 @@ make gate           # look at learned_nll vs heur_nll@same columns — gain > 0 
 ```
 
 For the complete set of results, tables, wall-clock validation on
-Qwen2.5-0.5B, repository layout, and citation, see the Russian description
-above — the reported numbers are identical.
+Qwen2.5-0.5B, GPU validation with FlashAttention on Qwen2.5-3B (Tesla T4),
+repository layout, and citation, see the Russian description above — the
+reported numbers are identical.
 
 ## License
 
